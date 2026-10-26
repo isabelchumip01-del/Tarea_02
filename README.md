@@ -38,5 +38,4 @@ La base de datos se encuentra alojada en el repositorio de la Tarea 1:
 Chumi, I. (2024). *Factores que inciden en la representatividad de las mujeres para la toma de decisiones en la gestión del recurso hídrico* [Datos brutos no publicados]. Universidad del Azuay.
 
 ## Página web
-
-La versión publicada del análisis estará disponible mediante GitHub Pages.
+[La versión publicada del análisis estará disponible mediante GitHub Pages.](https://isabelchumip01-del.github.io/Tarea_02/)
