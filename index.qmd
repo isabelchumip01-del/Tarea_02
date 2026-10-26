@@ -1,0 +1,458 @@
+---
+title: "Factores que inciden en la representatividad de las mujeres para la toma de decisiones en la gestión del recurso hídrico."
+author: "Isabel Chumi"
+format: html
+lang: es
+toc: true
+embed-resources: true
+---
+
+# Introducción
+
+El presente estudio es un análisis de los factores asociados con la representatividad de las mujeres en la Junta de Riego y Drenaje Machángara.Estos datos se obtuvieron a través de la aplicación de ***encuestas a 262 usuarios de diferentes tomas de agua***. Los **datos desglosados por sexo**, son datos que permiten *detectar brechas económicas, sociales o de liderazgo entre ambos sexos* (como diferencias salariales o acceso a recursos). Para este caso se levantó información de hombres y mujeres de la junta de riego ya que el objetivo del estudio es conocer la disparidad de género en la gestión de los recursos hídricos.
+Varios estudios mencionan que la división de género impuesta por las normas laborales y sociales adjudican numerosas responsabilidades relacionadas con el agua a la mujer, mientras que otorgan la mayoría de los poderes y derechos sobre este recurso a los hombres (*Anderson, 2011; Naciones Unidas, 2012*).
+
+Los datos utilizados en este análisis son de fuente primaria y fueron obtenidos en el marco de la investigación *Factores que inciden en la representatividad de las mujeres para la toma de decisiones en la gestión del recurso hídrico*, desarrollada por Chumi (2024) con financiamiento del Vicerrectorado de Investigaciones de la Universidad del Azuay. La información fue recopilada mediante encuestas aplicadas a 262 usuarios de diferentes tomas de agua de la Junta de Riego y Drenaje Machángara.
+La base de datos utilizada para este ejercicio se encuentra disponible en GitHub: [Datos_Analisis.xlsx](https://raw.githubusercontent.com/isabelchumip01-del/Tarea_01_Chumi/main/Datos_Analisis.xlsx). 
+
+Entre las principales variables se encuentran la toma de agua, sexo, edad, nivel educativo, actividad principal, participación en la directiva, cargo ocupado, nivel de participación de mujeres y hombres, frecuencia de aceptación de las sugerencias realizadas por mujeres y factores que limitan la participación femenina. Asimismo, la base contiene variables relacionadas con el tiempo destinado a actividades no remuneradas vinculadas con el agua y coordenadas geográficas de las tomas de agua.(Chumi, 2024).
+
+## Preguntas 
+1. ¿Cuáles son los principales factores asociados con la participación de las mujeres en la toma de decisiones?
+2. ¿Cómo se distribuyen las mujeres lideresas dentro de la Junta de Riego y Drenaje Machángara?
+3. ¿Cómo se percibe la participación de las mujeres en comparación con la participación de los hombres en la gestión del agua?
+
+# Importación y preparación de los datos
+
+## Carga de bibliotecas 
+
+```{r}
+#| label: carga_bibliotecas
+#| message: false
+#| warning: false
+
+library(tidyverse)
+library(plotly)
+library(DT)
+library(readxl)
+```
+
+
+## Importación de los datos
+
+```{r}
+#| label: carga_datos
+#| message: false
+#| warning: false
+
+url_datos <- "https://raw.githubusercontent.com/isabelchumip01-del/Tarea_01_Chumi/main/Datos_Analisis.xlsx"
+
+archivo_temporal <- tempfile(fileext = ".xlsx")
+download.file(url_datos,  archivo_temporal,  mode = "wb")
+Datos_Analisis <- read_excel(archivo_temporal)
+
+# Para la correcta incorporación de los datos disponibles en GitHub, fue necesario utilizar una fuente accesible mediante URL. Debido a que `read_excel()` no permite importar directamente el archivo `.xlsx` desde la URL, se utilizó `download.file()` para descargarlo temporalmente y posteriormente `read_excel()` para incorporarlo a R. De esta manera, GitHub se mantiene como fuente de los datos y se evita depender de una ruta local del computador al reproducir el documento de Quarto.
+
+```
+
+## Exploración inicial
+
+```{r}
+#| label: exploración
+#| message: false
+#| warning: false
+
+dim(Datos_Analisis)
+glimpse(Datos_Analisis)
+
+head(Datos_Analisis)
+```
+
+# Preparación y limpieza de los datos
+
+```{r}
+#| label: verificación-variables
+#| message: false
+#| warning: false
+
+# Revisar las categorías de las variables principales
+
+Datos_Analisis %>%
+  count(Toma)
+
+Datos_Analisis %>%
+  count(Sexo)
+
+Datos_Analisis %>%
+  count(Directiva)
+
+Datos_Analisis %>%
+  count(Cargo_que_ocupa)
+
+Datos_Analisis %>%
+  count(Nivel_particapación_mujeres)
+
+Datos_Analisis %>%
+  count(Factores_limintan_participación_mujeres)
+```
+
+
+## Preparación de la variable "Factor"
+
+```{r}
+#| label: Preparación-variables 
+#| message: false
+#| warning: false
+
+Datos_Analisis <- Datos_Analisis %>%
+  rename(
+    toma = Toma,
+    sexo = Sexo,
+    directiva = Directiva,
+    cargo = Cargo_que_ocupa,
+    nivel_participacion = Nivel_particapación_mujeres,
+    factores = Factores_limintan_participación_mujeres)
+
+names(Datos_Analisis)
+
+glimpse(Datos_Analisis)
+
+```
+
+## Limpieza de variables
+
+```{r}
+#| label: limpieza-variables-1
+#| message: false
+#| warning: false
+
+Datos_Analisis %>%
+  select(factores) %>%
+  distinct()
+
+Datos_Factores <- Datos_Analisis %>%
+  separate_rows(factores, sep = ", ")
+
+Datos_Factores %>%
+  count(factores, sort = TRUE)
+
+# Unificar categorías equivalentes
+Datos_Factores <- Datos_Factores %>%
+  mutate(
+    factores = case_when(
+      factores == "Illiteracy" ~ "Analfabetismo",
+      factores == "Domestic activities do not leave time" ~
+        "Las actividades domésticas no le dejan tiempo",
+      factores == "Lack of knowledge" ~
+        "Falta de conocimiento",
+      factores == "Elderly people and there are no young people" ~
+        "Personas de tercera edad y no hay personas jóvenes",
+      TRUE ~ factores))
+
+Datos_Factores %>%
+  count(factores, sort = TRUE)
+
+Datos_Factores %>%
+  count(factores, sort = TRUE) %>%
+  print(n = Inf)
+
+# Durante la etapa de limpieza de datos, se unificaron los términos registrados en inglés y en español. Este proceso de estandarización permite evitar la duplicidad de información y que una misma categoría sea contabilizada como respuestas diferentes durante el análisis posterior.
+
+```
+
+## Tablas resumen 
+
+```{r}
+#| label: tabla_resumen_1
+#| message: false
+#| warning: false
+
+tabla_participacion <- Datos_Analisis %>%
+  count(toma, sexo) %>%
+  rename(
+    `Toma de agua` = toma,
+    `Sexo` = sexo,
+    `Número de personas` = n
+  )
+
+datatable(
+  tabla_participacion,
+  rownames = FALSE,
+  colnames = c(
+    "Toma de agua",
+    "Sexo",
+    "Número de personas"
+  ),
+  options = list(
+    language = list(
+      search = "Buscar:",
+      lengthMenu = "Mostrar _MENU_ registros",
+      info = "Mostrando _START_ a _END_ de _TOTAL_ registros",
+      paginate = list(
+        previous = "Anterior",
+        "next" = "Siguiente"
+      )
+    ),
+    pageLength = 10
+  )
+)
+
+```
+
+# Gráficos
+## Pregunta 1
+
+```{r}
+#| label: gráfico_Pregunta_1
+#| message: false
+#| warning: false
+#| fig-cap: "Principales factores asociados con la participación de las mujeres."
+#| fig-width: 10
+#| fig-height: 8
+
+factores_resumen <- Datos_Factores %>%
+  count(factores, sort = TRUE)
+
+ggplot(factores_resumen, aes(
+  x = reorder(factores, n),
+  y = n,
+  fill = factores
+)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    x = "Factor",
+    y = "Frecuencia",
+    caption = "Fuente: Elaboración propia Isabel Chumi."
+  ) +
+  scale_fill_viridis_d(option = "cividis") +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    plot.caption = element_text(size = 9),
+    axis.title = element_text(size = 10),
+    axis.text.y = element_text(size = 8),
+    axis.text.x = element_text(size = 9)
+  )
+
+# Los resultados muestran que el principal factor asociado con la participación de las mujeres corresponde a las actividades domésticas, con una frecuencia considerablemente superior al resto de factores identificados (178). También destacan la falta de interés, las actividades realizadas fuera del hogar y la recepción tardía de las convocatorias. Estos resultados evidencian que las limitaciones para la participación de las mujeres no responden a un único factor, sino que se relacionan con aspectos vinculados con la disponibilidad de tiempo, el interés y las condiciones en las que se desarrollan los espacios de participación.
+```
+
+
+## Pregunta 2
+
+```{r}
+#| label: gráfico_Pregunta_2
+#| message: false
+#| warning: false
+#| fig-cap: "Distribución de mujeres integrantes de directivas según toma de agua."
+#| fig-width: 9
+#| fig-height: 6
+
+# Identificar las mujeres que ocupan cargos en las directivas
+
+mujeres_directiva <- Datos_Analisis %>%
+  filter(
+    sexo == "Femenino",
+    directiva == "Sí"
+  ) %>%
+  count(toma, sort = TRUE)
+
+# Gráfico
+
+ggplot(
+  mujeres_directiva,
+  aes(
+    x = reorder(toma, n),
+    y = n,
+    color = n
+  )
+) +
+  geom_point(size = 3.5) +
+  coord_flip() +
+  scale_color_gradient(
+    low = "lightblue",
+    high = "darkblue"
+  ) +
+  labs(
+    x = "Toma de agua",
+    y = "Número de mujeres",
+    color = "Número de mujeres",
+    caption = "Fuente: Elaboración propia a partir de Chumi (2024)."
+  ) +
+  theme_minimal() +
+  theme(
+    axis.title = element_text(size = 9),
+    axis.text = element_text(size = 8),
+    legend.title = element_text(size = 8),
+    legend.text = element_text(size = 8),
+    plot.caption = element_text(size = 8)
+  )
+
+# La distribución de las mujeres integrantes de directivas muestra diferencias entre las tomas de agua de la Junta de Riego y Drenaje Machángara. Las tomas 13A y 16 concentran el mayor número de mujeres, con cuatro integrantes cada una, seguidas por la toma 26A, con tres. En las demás tomas identificadas se registra una participación menor, de entre una y dos mujeres. En conjunto, los resultados muestran que la presencia de mujeres en espacios directivos no se distribuye de manera uniforme entre las tomas de agua.
+
+```
+
+### Cargos ocupados por mujeres en las directivas
+
+```{r}
+#| label: gráfico_Pregunta_2_2
+#| message: false
+#| warning: false
+#| fig-cap: "Cargos ocupados por mujeres integrantes de directivas."
+#| fig-width: 7
+#| fig-height: 5
+
+cargos_mujeres <- Datos_Analisis %>%
+  filter(sexo == "Femenino", directiva == "Sí") %>%
+  mutate(
+    cargo = if_else(cargo == "Secretario", "Secretaria", cargo)
+  ) %>%
+  count(cargo, sort = TRUE)
+
+
+ggplot(cargos_mujeres, aes(
+  x = reorder(cargo, n),
+  y = n,
+  fill = n
+)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  scale_fill_gradient(
+    low = "lightblue",
+    high = "darkblue"
+  ) +
+  labs(
+    x = "Cargo",
+    y = "Número de mujeres",
+    fill = "Número de mujeres",
+    caption = "Fuente: Elaboración propia Isabel Chumi."
+  ) +
+  theme_minimal() +
+  theme(
+    axis.title = element_text(size = 9),
+    axis.text = element_text(size = 8),
+    legend.title = element_text(size = 8),
+    legend.text = element_text(size = 8),
+    plot.caption = element_text(size = 8)
+  )
+# Entre las 19 mujeres que forman parte de las directivas, los cargos con mayor frecuencia son vicepresidenta y secretaria, con cinco mujeres cada uno, seguidos por presidenta, con cuatro, y tesorera, con tres. Los cargos de vocal y vocal III presentan una menor frecuencia, con una mujer en cada caso. Estos resultados muestran que las mujeres participan en diferentes niveles de responsabilidad dentro de las directivas, incluyendo cargos de presidencia, vicepresidencia, secretaría y tesorería.
+
+
+```
+
+## Pregunta 3
+
+```{r}
+#| label: gráfico_Pregunta_3
+#| message: false
+#| warning: false
+#| fig-cap: "Percepción de la participación de mujeres y hombres en la gestión del agua."
+#| fig-width: 7
+#| fig-height: 5
+
+participacion_comparada <- bind_rows(
+  Datos_Analisis %>%
+    count(nivel_participacion) %>%
+    rename(nivel = nivel_participacion) %>%
+    mutate(grupo = "Mujeres"),
+  
+  Datos_Analisis %>%
+    count(Nivel_participación_hombres) %>%
+    rename(nivel = Nivel_participación_hombres) %>%
+    mutate(grupo = "Hombres"))
+
+grafico_participacion <- ggplot(
+  participacion_comparada,
+  aes(
+    x = nivel,
+    y = n,
+    color = grupo,
+    text = paste(
+      "Grupo:", grupo,
+      "<br>Nivel de participación:", nivel,
+      "<br>Frecuencia:", n
+    )
+  )
+) +
+  geom_linerange(
+    aes(ymin = 0, ymax = n),
+    position = position_dodge(width = 0.5),
+    linewidth = 2
+  ) +
+  scale_color_viridis_d(option = "plasma") +
+  labs(
+    x = "Nivel de participación",
+    y = "Frecuencia de respuestas",
+    color = "Grupo",
+    caption = "Fuente: Elaboración propia a partir de Chumi (2024)."
+  ) +
+  theme_minimal() +
+  theme(
+    axis.title = element_text(size = 9),
+    axis.text = element_text(size = 9),
+    legend.title = element_text(size = 9),
+    legend.text = element_text(size = 8),
+    plot.caption = element_text(size = 8)
+  )
+
+ggplotly(
+  grafico_participacion,
+  tooltip = "text"
+) %>%
+  config(displaylogo = FALSE)
+
+# La percepción de la participación presenta diferencias entre mujeres y hombres. En el caso de las mujeres, la categoría «Bastante» concentra la mayor frecuencia de respuestas, con 189 casos, mientras que 66 respuestas corresponden a «Poco» y 7 a «Nulo». En contraste, para los hombres predomina la categoría «Poco», con 170 respuestas, seguida de «Bastante», con 90, y «Nulo», con 2 respuestas. En términos descriptivos, estos resultados muestran una percepción más favorable de la participación de las mujeres que de los hombres dentro de la gestión del agua. Sin embargo, los resultados corresponden a la percepción de las personas encuestadas y no permiten afirmar por sí solos que exista una diferencia en la participación efectiva de mujeres y hombres.
+
+# Durante la elaboración de los gráficos se realizaron diferentes ajustes de visualización para mejorar su presentación en el documento de Quarto. En particular, se utilizaron los parámetros `fig-cap`, `fig-height` y `fig-width` para establecer los títulos de las figuras y controlar sus dimensiones, de manera que los gráficos se visualizaran correctamente dentro del documento.
+
+```
+
+
+# Conclusiones 
+
+El análisis permitió identificar diferentes elementos relacionados con la participación de las mujeres en la gestión del recurso hídrico. Los factores que con mayor relevancia son: las actividades domésticas, la falta de interés, las actividades realizadas fuera del hogar y la recepción tardía de las convocatorias. Estos resultados muestran que las condiciones de tiempo y las características de los espacios de participación constituyen elementos relevantes para comprender la participación de las mujeres.
+
+En segundo lugar, se identificó la presencia de mujeres en las directivas de las diferentes tomas de agua analizadas. De las 262 personas consideradas en la base de datos, 19 mujeres registraron participación en directivas. Estas mujeres ocupan diferentes cargos, entre ellos presidencia, vicepresidencia, secretaría, tesorería y vocalías, lo que evidencia su presencia en distintos niveles de responsabilidad dentro de las organizaciones.
+
+Finalmente, la comparación de las percepciones sobre la participación muestra una diferencia entre mujeres y hombres. Para las mujeres, la categoría «Bastante» presentó la mayor frecuencia de respuestas, con 189 casos, mientras que para los hombres predominó la categoría «Poco», con 170 casos. Esto evidencia una diferencia en la percepción de la participación de ambos grupos dentro de la gestión del agua.
+
+
+# Limitaciones del análisis
+
+Una limitación relacionada con el desarrollo del análisis fue el proceso de aprendizaje y aplicación de las herramientas utilizadas. El trabajo requirió comprender progresivamente el uso de *tidyverse* para la transformación y organización de los datos, *ggplot2* y *ggplotly* para la elaboración de visualizaciones, y Quarto para la integración y presentación de los resultados. Durante este proceso fue necesario revisar y comprobar el funcionamiento de diferentes funciones, parámetros y estructuras de código, así como corregir errores de ejecución y ajustar las visualizaciones. Por ello, algunas decisiones de procesamiento y presentación estuvieron condicionadas por el nivel de aprendizaje alcanzado durante la elaboración del ejercicio. No obstante, los códigos utilizados fueron ejecutados y verificados, y los resultados obtenidos fueron revisados antes de incorporarlos al análisis.
+
+Por otro lado, el análisis del caso de estudio presenta algunas limitaciones que deben considerarse al interpretar los resultados. En primer lugar, los datos corresponden a las personas participantes en el levantamiento realizado en 2024 y, por tanto, los resultados describen las características de la población estudiada y no necesariamente pueden generalizarse a todas las organizaciones de gestión del agua.
+
+En segundo lugar, parte de las variables analizadas corresponden a percepciones y respuestas declaradas por las personas participantes. Por ello, los resultados permiten identificar tendencias en las percepciones, pero no constituyen una medición directa de la participación efectiva de mujeres y hombres en todos los espacios de gestión del agua.
+
+Finalmente, el análisis realizado es principalmente descriptivo. En consecuencia, los factores identificados se presentan como elementos asociados a la participación según las respuestas obtenidas, sin establecer relaciones causales entre estos factores y el nivel de participación.
+
+# Referencias bibliográficas
+Anderson, J. (Ed.). (2011). *Mujer rural: Cambios y persistencias en América Latina* (1. ed). CEPES.
+Chumi, I. (2024). *Factores que inciden en la representatividad de las mujeres para la toma de decisiones en la gestión del recurso hídrico* [Datos brutos no publicados]. Universidad del Azuay.
+Naciones Unidas. (2012). *Las mujeres y la ordenación de los recursos hídricos agrícolas Un camino hacia la obtención de la igualdad entre los géneros* | Naciones Unidas. United Nations; United Nations. 
+
+
+# Declaración de uso de asistentes de IA, o la indicación de que no se usaron.
+
+Para la elaboración de este trabajo se utilizó ChatGPT como herramienta de apoyo. Su utilización estuvo orientada principalmente a la comprensión y revisión de código en R, la identificación y corrección de errores durante la elaboración del documento en Quarto y el apoyo en la organización y redacción de algunas secciones del informe. 
+
+La descarga de la base de datos se realizó mediante la extracción directa desde una URL. Durante esta fase, se utilizó asistencia de IA para la resolución de problemas de programación (troubleshooting), debido a un error en el código de conexión. La herramienta sirvió como guía para interpretar los mensajes de error de R, permitiendo comprender la lógica del procedimiento y corregir las líneas de código afectadas.
+
+A esta misma IA se consultaron modelos de lenguaje para identificar parámetros de optimización visual (como los atributos de celda fig-cap, fig-height y fig-width) con el fin de mejorar la distribución estética de los gráficos.
+
+La selección de las variables, la ejecución y verificación de los códigos, la revisión de los resultados y la interpretación de los datos fueron realizadas y comprobadas por la autora.
+
+
+
+
+
+
+
+
+
+
+
+
+
