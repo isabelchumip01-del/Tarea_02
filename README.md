@@ -6,7 +6,7 @@ Isabel Chumi
 
 ## Descripción
 
-Este repositorio contiene el análisis de datos realizado para la Tarea 2 mediante R, tidyverse, ggplot2 y Quarto.
+Este repositorio contiene el análisis de datos realizado para la Tarea 2 mediante RStudio, tidyverse, ggplot2 y Quarto.
 
 El análisis utiliza datos de la investigación *Factores que inciden en la representatividad de las mujeres para la toma de decisiones en la gestión del recurso hídrico*, realizada por Chumi (2024).
 
