@@ -430,11 +430,13 @@ Finalmente, el análisis realizado es principalmente descriptivo. En consecuenci
 
 # Referencias bibliográficas
 Anderson, J. (Ed.). (2011). *Mujer rural: Cambios y persistencias en América Latina* (1. ed). CEPES.
+
 Chumi, I. (2024). *Factores que inciden en la representatividad de las mujeres para la toma de decisiones en la gestión del recurso hídrico* [Datos brutos no publicados]. Universidad del Azuay.
+
 Naciones Unidas. (2012). *Las mujeres y la ordenación de los recursos hídricos agrícolas Un camino hacia la obtención de la igualdad entre los géneros* | Naciones Unidas. United Nations; United Nations. 
 
 
-# Declaración de uso de asistentes de IA, o la indicación de que no se usaron.
+# Declaración de uso de asistentes de IA
 
 Para la elaboración de este trabajo se utilizó ChatGPT como herramienta de apoyo. Su utilización estuvo orientada principalmente a la comprensión y revisión de código en R, la identificación y corrección de errores durante la elaboración del documento en Quarto y el apoyo en la organización y redacción de algunas secciones del informe. 
 
